@@ -56,7 +56,7 @@ pipeline {
             steps {
                 script {
                     sh "sudo microk8s.helm3 upgrade --install microk8s --set image.tag=v_${BUILD_NUMBER} /home/ubuntu/kubernetes-poc/"
-                    sh "sudo microk8s.kubectl rollout status deployment.apps/microk8s-kubernets-poc"
+                    sh "sudo microk8s.kubectl rollout status deployment.apps/microk8s-kubernetes-poc"
                     sh "sudo docker images > unused_images_cid"
                 }
             }
