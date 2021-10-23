@@ -72,6 +72,18 @@ pipeline {
                 echo currentBuild.result
             }
         }
+        stage ('rollback') {
+            steps {
+                sh '''
+                    if [ $rollback == true ];
+                    then
+                    kubectl set image deployment.apps/rajeev-deployment rajeev=rajchauhan9/microk8s-kubernetes-poc:v_${OLD_BUILD_NUMBER}
+                    kubectl rollout status deployment.apps/rajeev-deployment
+                    else
+                    echo "parameter not selected"
+                '''
+            }
+        }
         // stage('remove unused images') {
         //     steps {
         //         script {
