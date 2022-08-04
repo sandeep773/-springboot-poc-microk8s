@@ -1,31 +1,60 @@
+# version: 0.2
+
+# phases:
+#   pre_build:
+#     commands:
+#       - echo Logging in to Amazon ECR...
+#       - echo $AWS_DEFAULT_REGION
+#       - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
+#       - echo $REPOSITORY_URI
+#       - aws --version
+#       - aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email
+#       - $(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email)
+#       - REPOSITORY_URI=836163115243:repository/demo-project/demo-project
+#       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+#       - IMAGE_TAG=${COMMIT_HASH:=latest}
+#   build:
+#     commands:
+#       - echo Build started on `date`
+#       - mvn package
+#       - ./gradlew clean build
+#       - sudo rm DOCKER/spring-boot-with-prometheus-0.1.0.jar
+#       - sudo cp build/libs/spring-boot-with-prometheus-0.1.0.jar DOCKER/
+#       - echo Building the Docker image...
+#       - docker build -t $REPOSITORY_URI:latest .
+#       - echo Tagging Docker image...
+#       - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+#   post_build:
+#     commands:
+#       - echo Build completed on `date`
+#       - echo Pushing the Docker images...
+#       - docker push $REPOSITORY_URI:$IMAGE_TAG
+
+#############################33
+
 version: 0.2
 
 phases:
   pre_build:
     commands:
-      - echo Logging in to Amazon ECR...
-      - echo $AWS_DEFAULT_REGION
-      - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
-      - echo $REPOSITORY_URI
-      - aws --version
-      - aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email
-      - $(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email)
-      - REPOSITORY_URI=836163115243:repository/demo-project/demo-project
-      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
-      - IMAGE_TAG=${COMMIT_HASH:=latest}
+     - echo Logging in to Amazon ECR.....
+     - aws --version
+     - $(aws ecr get-login --no-include-email --region us-east-1)
+     - REPOSITORY_URI=836163115243:repository/demo-project/demo-project
+     - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      
   build:
     commands:
       - echo Build started on `date`
-      - mvn package
-      - ./gradlew clean build
-      - sudo rm DOCKER/spring-boot-with-prometheus-0.1.0.jar
-      - sudo cp build/libs/spring-boot-with-prometheus-0.1.0.jar DOCKER/
+      - sh "./gradlew clean build
       - echo Building the Docker image...
       - docker build -t $REPOSITORY_URI:latest .
-      - echo Tagging Docker image...
       - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+
   post_build:
     commands:
       - echo Build completed on `date`
       - echo Pushing the Docker images...
       - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - echo Writing image definitions file...
+      - printf '[{"name":"demo-project","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
