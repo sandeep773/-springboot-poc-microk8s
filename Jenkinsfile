@@ -41,23 +41,22 @@ pipeline {
         stage('building docker image') {
             steps {
                 script {
-                    sh "cd DOCKER; sudo docker build -t harshvardhan1402/microk8s-kubernetes-poc:v_${BUILD_NUMBER} ."
+                    sh "cd DOCKER; sudo docker build -t rajchauhan9/microk8s-kubernetes-poc:v_${BUILD_NUMBER} ."
                 }
             }
         }
         stage('dcoker push') {
             steps {
                 script {
-                    sh "sudo docker push harshvardhan1402/microk8s-kubernetes-poc:v_${BUILD_NUMBER}"
+                    sh "sudo docker push rajchauhan9/microk8s-kubernetes-poc:v_${BUILD_NUMBER}"
                 }
             }
         }
-        stage('deploying on microk8s') {
+        stage('deploying on kubernetes') {
             steps {
                 script {
-                    sh "sudo microk8s.helm3 upgrade --install microk8s --set image.tag=v_${BUILD_NUMBER} /home/ubuntu/kubernetes-poc/"
-                    sh "sudo microk8s.kubectl rollout status deployment.apps/microk8s-kubernetes-poc"
-                    sh "sudo docker images > unused_images_cid"
+                    sh "kubectl set image deployment.apps/rajeev-deployment rajeev=rajchauhan9/microk8s-kubernetes-poc:v_${BUILD_NUMBER}"
+                    sh "kubectl rollout status deployment.apps/rajeev-deployment"
                 }
             }
         }
@@ -71,6 +70,18 @@ pipeline {
                     }
                 }
                 echo currentBuild.result
+            }
+        }
+        stage ('rollback') {
+            steps {
+                sh '''
+                    if [ $rollback == true ];
+                    then
+                    kubectl set image deployment.apps/rajeev-deployment rajeev=rajchauhan9/microk8s-kubernetes-poc:v_${OLD_BUILD_NUMBER}
+                    kubectl rollout status deployment.apps/rajeev-deployment
+                    else
+                    echo "parameter not selected"
+                '''
             }
         }
         // stage('remove unused images') {
